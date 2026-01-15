@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<!-- =====================================================
+     INÍCIO DO HTML
+===================================================== -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Agenda e Caixa - Estúdio</title>
+
+<!-- =====================================================
+     INÍCIO DO CSS
+===================================================== -->
+<style>
+
+/* ===== ESTILOS GERAIS ===== */
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
+  padding: 20px;
+}
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+.hidden {
+  display: none !important;
+}
+
+/* ===== LOGIN ===== */
+#login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+#login img {
+  width: 120px;
+  margin-bottom: 16px;
+}
+#login h2 {
+  margin: 6px 0 14px;
+}
+#login select,
+#login input {
+  width: 280px;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+#login button {
+  width: 280px;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background .2s;
+}
+#login button:hover { background: #0056b3; }
+
+/* ===== BOTÕES E INPUTS ===== */
+button {
+  padding: 8px 12px;
+  margin: 4px;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  transition: background .2s;
+}
+button:hover { background: #0056b3; }
+
+input, select {
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* ===== PAINEL ===== */
+#painel h2 {
+  background: #007bff;
+  color: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== DIAS ===== */
+.dias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.dias button {
+  width: 100%;
+  padding: 10px;
+  background: #eee;
+  color: #333;
+}
+.dias button:hover { background: #ddd; }
+
+/* ===== REGISTROS ===== */
+.registro {
+  border-bottom: 1px solid #ddd;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.entrada { color: green; font-weight: bold; }
+.saida { color: red; font-weight: bold; }
+
+/* ===== ADMIN ===== */
+.admin {
+  color: #7a0b0b;
+  font-weight: bold;
+}
+.reset {
+  background: darkred;
+  color: white;
+}
+.reset:hover { background: #a00000; }
+
+/* ===== IMPRESSÃO ===== */
+@media print {
+  button, select, input { display: none; }
+}
+
+</style>
+<!-- =====================================================
+     FIM DO CSS
+===================================================== -->
+</head>
+
+<body>
+
+<!-- ===== CONTAINER PRINCIPAL ===== -->
+<div class="container">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="login">
+    <img src="icon/logo.png" alt="Logo do Estúdio">
+    <h2>Login</h2>
+    <select id="tipoLogin">
+      <option value="admin">Administrador</option>
+      <option value="usuario" selected>Usuário</option>
+    </select>
+    <input type="password" id="senha" placeholder="Senha">
+    <button id="btnEntrar">Entrar</button>
+  </div>
+
+  <!-- ===== PAINEL ===== -->
+  <div id="painel" class="hidden">
+
+    <!-- CABEÇALHO -->
+    <h2>
+      <span>Agenda do Estúdio <span id="perfil"></span></span>
+      <button id="btnSair">Sair</button>
+    </h2>
+
+    <!-- ===== ÁREA ADMIN ===== -->
+    <div id="adminArea" class="hidden">
+      <h3>Área do Administrador</h3>
+      <button class="reset" id="btnReset">⚠ APAGAR TODAS AS INFORMAÇÕES</button>
+      <p style="color:red;font-size:13px;">Esta ação remove TODOS os dados salvos e reinicia o sistema.</p>
+      <hr>
+
+      <h3>Relatórios</h3>
+      <select id="filtroProfissional">
+        <option value="todos">Todos os profissionais</option>
+        <option>Profissional 1</option>
+        <option>Profissional 2</option>
+        <option>Profissional 3</option>
+      </select>
+      <button id="btnRelatorio">Gerar Relatório</button>
+      <button onclick="window.print()">Imprimir</button>
+      <div id="relatorio" style="margin-top:10px;"></div>
+      <hr>
+    </div>
+
+    <!-- ===== DIAS ===== -->
+    <h3>Dias do mês</h3>
+    <div class="dias" id="dias"></div>
+
+    <!-- ===== DIA ===== -->
+    <div id="areaDia" class="hidden">
+      <h3>Dia <span id="diaAtual"></span></h3>
+
+      <h4>➕ Entrada (Serviço)</h4>
+      <input id="cliente" placeholder="Cliente (obrigatório)">
+      <input id="descricaoEntrada" placeholder="Descrição do serviço (obrigatório)">
+      <input id="valorEntrada" type="number" placeholder="Valor do serviço (obrigatório)">
+      <input id="horario" type="time">
+      <select id="profissionalEntrada">
+        <option value="">Selecione o profissional</option>
+        <option>Profissional 1</option>
+        <option>Profissional 2</option>
+        <option>Profissional 3</option>
+      </select>
+      <select id="pagamento">
+        <option value="">Forma de pagamento</option>
+        <option>Dinheiro</option>
+        <option>Pix</option>
+        <option>Cartão</option>
+      </select>
+      <button id="btnAddEntrada">Adicionar Entrada</button>
+
+      <hr>
+
+      <h4>➖ Saída (Insumos)</h4>
+      <input id="descricaoSaida" placeholder="Descrição da saída (obrigatório)">
+      <input id="valorSaida" type="number" placeholder="Valor da saída (obrigatório)">
+      <select id="profissionalSaida">
+        <option value="">Selecione o profissional</option>
+        <option>Profissional 1</option>
+        <option>Profissional 2</option>
+        <option>Profissional 3</option>
+      </select>
+      <button id="btnAddSaida">Adicionar Saída</button>
+
+      <h4>Movimentações do dia</h4>
+      <div id="lista"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =====================================================
+     INÍCIO DO JAVASCRIPT
+===================================================== -->
+<script>
+
+/* ===== CONFIGURAÇÃO ===== */
+const CONFIG_ACESSO = { admin: "admin123", usuario: "123" };
+let tipo = "";
+let diaSelecionado = "";
+
+/* ===== ELEMENTOS ===== */
+const el = {
+  login: document.getElementById("login"),
+  painel: document.getElementById("painel"),
+  tipoLogin: document.getElementById("tipoLogin"),
+  senha: document.getElementById("senha"),
+  perfil: document.getElementById("perfil"),
+  adminArea: document.getElementById("adminArea"),
+  dias: document.getElementById("dias"),
+  areaDia: document.getElementById("areaDia"),
+  diaAtual: document.getElementById("diaAtual"),
+  lista: document.getElementById("lista"),
+  relatorio: document.getElementById("relatorio"),
+  filtroProfissional: document.getElementById("filtroProfissional"),
+  btnEntrar: document.getElementById("btnEntrar"),
+  btnSair: document.getElementById("btnSair"),
+  btnReset: document.getElementById("btnReset"),
+  btnRelatorio: document.getElementById("btnRelatorio"),
+  btnAddEntrada: document.getElementById("btnAddEntrada"),
+  btnAddSaida: document.getElementById("btnAddSaida"),
+  cliente: document.getElementById("cliente"),
+  valorEntrada: document.getElementById("valorEntrada"),
+  horario: document.getElementById("horario"),
+  profissionalEntrada: document.getElementById("profissionalEntrada"),
+  pagamento: document.getElementById("pagamento"),
+  descricaoSaida: document.getElementById("descricaoSaida"),
+  valorSaida: document.getElementById("valorSaida"),
+  profissionalSaida: document.getElementById("profissionalSaida"),
+  descricaoEntrada: document.getElementById("descricaoEntrada"),
+};
+
+/* ===== EVENTOS ===== */
+el.btnEntrar.addEventListener("click", entrar);
+el.btnSair.addEventListener("click", sair);
+el.btnReset.addEventListener("click", apagarTudo);
+el.btnRelatorio.addEventListener("click", gerarRelatorio);
+el.btnAddEntrada.addEventListener("click", adicionarEntrada);
+el.btnAddSaida.addEventListener("click", adicionarSaida);
+
+/* ===== LOGIN ===== */
+function entrar() {
+  const tipoSelecionado = el.tipoLogin.value;
+  const senhaDigitada = el.senha.value;
+
+  if (CONFIG_ACESSO[tipoSelecionado] !== senhaDigitada) {
+    alert("Senha incorreta");
+    return;
+  }
+
+  tipo = tipoSelecionado;
+  el.login.classList.add("hidden");
+  el.painel.classList.remove("hidden");
+
+  el.perfil.innerText = tipo === "admin" ? "(Administrador)" : "(Usuário)";
+  el.perfil.className = tipo === "admin" ? "admin" : "";
+
+  tipo === "admin"
+    ? el.adminArea.classList.remove("hidden")
+    : el.adminArea.classList.add("hidden");
+
+  gerarDias();
+}
+
+function sair() {
+  el.painel.classList.add("hidden");
+  el.login.classList.remove("hidden");
+  el.senha.value = "";
+  el.dias.innerHTML = "";
+  el.areaDia.classList.add("hidden");
+  el.lista.innerHTML = "";
+  el.relatorio.innerHTML = "";
+  tipo = "";
+  diaSelecionado = "";
+}
+
+/* ===== RESET ===== */
+function apagarTudo() {
+  if (!confirm("TEM CERTEZA que deseja apagar TODOS os dados?")) return;
+  if (!confirm("Esta ação NÃO pode ser desfeita. Confirmar novamente?")) return;
+  localStorage.removeItem("agenda");
+  location.reload();
+}
+
+/* ===== DIAS ===== */
+function gerarDias() {
+  el.dias.innerHTML = "";
+  for (let i = 1; i <= 31; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = i;
+    btn.onclick = () => abrirDia(i);
+    el.dias.appendChild(btn);
+  }
+}
+
+function abrirDia(dia) {
+  diaSelecionado = dia;
+  el.diaAtual.innerText = dia;
+  el.areaDia.classList.remove("hidden");
+  listar();
+}
+
+/* ===== ENTRADA ===== */
+function adicionarEntrada() {
+  if (!el.cliente.value || !el.valorEntrada.value || !el.horario.value || !el.pagamento.value || !el.profissionalEntrada.value) {
+    alert("Preencha TODOS os campos da entrada");
+    return;
+  }
+
+  salvar({
+    tipo: "entrada",
+    cliente: el.cliente.value,
+    descricao: el.descricaoEntrada.value,
+    valor: Number(el.valorEntrada.value),
+    horario: el.horario.value,
+    pagamento: el.pagamento.value,
+    profissional: el.profissionalEntrada.value
+  });
+
+if (
+  !el.cliente.value ||
+  !el.descricaoEntrada.value ||
+  !el.valorEntrada.value ||
+  !el.horario.value ||
+  !el.pagamento.value ||
+  !el.profissionalEntrada.value
+) {
+  alert("Preencha TODOS os campos da entrada");
+  return;
+}
+
+  el.valorEntrada.value = "";
+  el.horario.value = "";
+  el.pagamento.value = "";
+  el.profissionalEntrada.value = "";
+  listar();
+}
+
+/* ===== SAÍDA ===== */
+function adicionarSaida() {
+  if (!el.descricaoSaida.value || !el.valorSaida.value || !el.profissionalSaida.value) {
+    alert("Preencha TODOS os campos da saída");
+    return;
+  }
+
+  salvar({
+    tipo: "saida",
+    descricao: el.descricaoSaida.value,
+    valor: Number(el.valorSaida.value),
+    profissional: el.profissionalSaida.value
+  });
+
+  el.descricaoSaida.value = "";
+  el.valorSaida.value = "";
+  el.profissionalSaida.value = "";
+  listar();
+}
+
+/* ===== STORAGE ===== */
+function salvar(obj) {
+  const dados = JSON.parse(localStorage.getItem("agenda") || "{}");
+  if (!dados[diaSelecionado]) dados[diaSelecionado] = [];
+  dados[diaSelecionado].push(obj);
+  localStorage.setItem("agenda", JSON.stringify(dados));
+}
+
+function listar() {
+  el.lista.innerHTML = "";
+  const dados = JSON.parse(localStorage.getItem("agenda") || "{}");
+  const registros = dados[diaSelecionado] || [];
+
+  registros.forEach((r, i) => {
+    const div = document.createElement("div");
+    div.className = "registro";
+
+    div.innerHTML = r.tipo === "entrada"
+      ? `<span class="entrada">${r.horario} - ${r.cliente} - ${r.descricao} - R$ ${r.valor} (${r.pagamento}) - ${r.profissional}</span>
+         ${tipo === "admin" ? `<button onclick="excluir(${i})">Excluir</button>` : ""}`
+      : `<span class="saida">SAÍDA - ${r.descricao} - R$ ${r.valor} (${r.profissional})</span>
+         ${tipo === "admin" ? `<button onclick="excluir(${i})">Excluir</button>` : ""}`;
+
+    el.lista.appendChild(div);
+  });
+}
+
+function excluir(i) {
+  const dados = JSON.parse(localStorage.getItem("agenda") || "{}");
+  dados[diaSelecionado].splice(i, 1);
+  localStorage.setItem("agenda", JSON.stringify(dados));
+  listar();
+}
+
+/* ===== RELATÓRIO ===== */
+function gerarRelatorio() {
+  const filtro = el.filtroProfissional.value;
+  const dados = JSON.parse(localStorage.getItem("agenda") || "{}");
+  let html = "<h4>Relatório Geral</h4>";
+  let totalEntrada = 0;
+  let totalSaida = 0;
+
+  for (const dia in dados) {
+    dados[dia].forEach(r => {
+      if (filtro === "todos" || r.profissional === filtro) {
+        html += `Dia ${dia} - ${r.horario} - ${r.cliente} - ${r.descricao} - R$ ${r.valor} - ${r.profissional}<br>`;
+        r.tipo === "entrada" ? totalEntrada += r.valor : totalSaida += r.valor;
+      }
+    });
+  }
+
+  html += `<hr>
+    <strong>Total Entradas: R$ ${totalEntrada}</strong><br>
+    <strong>Total Saídas: R$ ${totalSaida}</strong><br>
+    <strong>Saldo Final: R$ ${totalEntrada - totalSaida}</strong>`;
+
+  el.relatorio.innerHTML = html;
+}
+
+</script>
+</body>
+</html>
