@@ -247,9 +247,30 @@ input, select {
 <script>
 
 /* ===== CONFIGURAÇÃO ===== */
-const CONFIG_ACESSO = { admin: "admin123", usuario: "123" };
-let tipo = "";
-let diaSelecionado = "";
+async function entrar() {
+  const tipoSelecionado = el.tipoLogin.value;
+  const senhaDigitada = el.senha.value;
+
+  const resp = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tipo: tipoSelecionado,
+      senha: senhaDigitada
+    })
+  });
+
+  if (!resp.ok) {
+    alert("Login inválido");
+    return;
+  }
+
+  const data = await resp.json();
+  tipo = data.tipo;
+
+  el.login.classList.add("hidden");
+  el.painel.classList.remove("hidden");
+}
 
 /* ===== ELEMENTOS ===== */
 const el = {
